@@ -36,10 +36,12 @@ class BoxesGame:
                 result_position_info = self.update_position(event.keysym, self.player1_position, True)
                 if result_position_info[0]:
                     self.player1_position = (result_position_info[1], result_position_info[2])
+                    self.player1_turn = False
             else:
                 result_position_info = self.update_position(event.keysym, self.player2_position, False)
                 if result_position_info[0]:
                     self.player2_position = (result_position_info[1], result_position_info[2])
+                    self.player1_turn = True
 
         print(self.board_status)
 
