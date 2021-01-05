@@ -32,31 +32,49 @@ class BoxesGame:
 
     def on_key_click(self, event):
         if event.char != event.keysym and len(event.char) != 1:
-            if event.keysym == "Up":
-                new_player1_position_x = self.player1_position[0] - 1
-                new_player1_position_y = self.player1_position[1]
-                if self.player1_turn and new_player1_position_x >= 0 and self.board_status[new_player1_position_x][new_player1_position_y] != 2:
-                    self.player1_position = (new_player1_position_x, new_player1_position_y)
-                    self.board_status[new_player1_position_x][new_player1_position_y] = 1
-            elif event.keysym == "Right":
-                new_player1_position_x = self.player1_position[0]
-                new_player1_position_y = self.player1_position[1] + 1
-                if self.player1_turn and new_player1_position_y < number_of_dots and self.board_status[new_player1_position_x][new_player1_position_y] != 2:
-                    self.player1_position = (new_player1_position_x, new_player1_position_y)
-                    self.board_status[new_player1_position_x][new_player1_position_y] = 1
-            elif event.keysym == "Down":
-                new_player1_position_x = self.player1_position[0] + 1
-                new_player1_position_y = self.player1_position[1]
-                if self.player1_turn and new_player1_position_x < number_of_dots and self.board_status[new_player1_position_x][new_player1_position_y] != 2:
-                    self.player1_position = (new_player1_position_x, new_player1_position_y)
-                    self.board_status[new_player1_position_x][new_player1_position_y] = 1
-            elif event.keysym == "Left":
-                new_player1_position_x = self.player1_position[0]
-                new_player1_position_y = self.player1_position[1] - 1
-                if self.player1_turn and new_player1_position_y >= 0 and self.board_status[new_player1_position_x][new_player1_position_y] != 2:
-                    self.player1_position = (new_player1_position_x, new_player1_position_y)
-                    self.board_status[new_player1_position_x][new_player1_position_y] = 1
+            if self.player1_turn is True:
+                result_position_info = self.update_position(event.keysym, self.player1_position, True)
+                if result_position_info[0]:
+                    self.player1_position = (result_position_info[1], result_position_info[2])
+            else:
+                result_position_info = self.update_position(event.keysym, self.player2_position, False)
+                if result_position_info[0]:
+                    self.player2_position = (result_position_info[1], result_position_info[2])
+
         print(self.board_status)
+
+    def update_position(self, pressed_key, player_position, is_player_1):
+        new_player_position_x = -1
+        new_player_position_y = -1
+
+        current_player_indicator = 1 if is_player_1 is True else 2
+        enemy_player_indicator = 2 if is_player_1 is True else 1
+        is_valid = False
+        if pressed_key == "Up":
+            new_player_position_x = player_position[0] - 1
+            new_player_position_y = player_position[1]
+            if new_player_position_x >= 0 and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+                self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
+                is_valid = True
+        elif pressed_key == "Right":
+            new_player_position_x = player_position[0]
+            new_player_position_y = player_position[1] + 1
+            if new_player_position_y < number_of_dots and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+                self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
+                is_valid = True
+        elif pressed_key == "Down":
+            new_player_position_x = player_position[0] + 1
+            new_player_position_y = player_position[1]
+            if new_player_position_x < number_of_dots and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+                self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
+                is_valid = True
+        elif pressed_key == "Left":
+            new_player_position_x = player_position[0]
+            new_player_position_y = player_position[1] - 1
+            if new_player_position_y >= 0 and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+                self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
+                is_valid = True
+        return is_valid, new_player_position_x, new_player_position_y
 
     def play_again(self):
         self.player1_turn = True
