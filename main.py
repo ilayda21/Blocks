@@ -1,5 +1,5 @@
 from tkinter import *
-
+import numpy.linalg as deter
 import numpy as np
 
 size_of_board = 600
@@ -17,6 +17,7 @@ Green_color = '#7BC043'
 dot_width = 0.25 * size_of_board / number_of_dots
 edge_width = 0.1 * size_of_board / number_of_dots
 distance_between_dots = size_of_board / number_of_dots
+
 
 
 class BoxesGame:
@@ -37,43 +38,50 @@ class BoxesGame:
                 if result_position_info[0]:
                     self.player1_position = (result_position_info[1], result_position_info[2])
                     self.player1_turn = False
+                count1 = self.square_count(1, self.board_status)
+
             else:
                 result_position_info = self.update_position(event.keysym, self.player2_position, False)
                 if result_position_info[0]:
                     self.player2_position = (result_position_info[1], result_position_info[2])
                     self.player1_turn = True
+                count2 = self.square_count(5, self.board_status)
 
-        print(self.board_status)
+            print(self.board_status)
 
     def update_position(self, pressed_key, player_position, is_player_1):
         new_player_position_x = -1
         new_player_position_y = -1
 
-        current_player_indicator = 1 if is_player_1 is True else 2
-        enemy_player_indicator = 2 if is_player_1 is True else 1
+        current_player_indicator = 1 if is_player_1 is True else 5
+        enemy_player_indicator = 5 if is_player_1 is True else 1
         is_valid = False
         if pressed_key == "Up":
             new_player_position_x = player_position[0] - 1
             new_player_position_y = player_position[1]
-            if new_player_position_x >= 0 and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+            if new_player_position_x >= 0 and self.board_status[new_player_position_x][
+                new_player_position_y] != enemy_player_indicator:
                 self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
         elif pressed_key == "Right":
             new_player_position_x = player_position[0]
             new_player_position_y = player_position[1] + 1
-            if new_player_position_y < number_of_dots and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+            if new_player_position_y < number_of_dots and self.board_status[new_player_position_x][
+                new_player_position_y] != enemy_player_indicator:
                 self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
         elif pressed_key == "Down":
             new_player_position_x = player_position[0] + 1
             new_player_position_y = player_position[1]
-            if new_player_position_x < number_of_dots and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+            if new_player_position_x < number_of_dots and self.board_status[new_player_position_x][
+                new_player_position_y] != enemy_player_indicator:
                 self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
         elif pressed_key == "Left":
             new_player_position_x = player_position[0]
             new_player_position_y = player_position[1] - 1
-            if new_player_position_y >= 0 and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+            if new_player_position_y >= 0 and self.board_status[new_player_position_x][
+                new_player_position_y] != enemy_player_indicator:
                 self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
         return is_valid, new_player_position_x, new_player_position_y
@@ -88,7 +96,7 @@ class BoxesGame:
         self.board_status = np.zeros(shape=(number_of_dots, number_of_dots))
 
         self.board_status[0][0] = 1
-        self.board_status[number_of_dots - 1][number_of_dots - 1] = 2
+        self.board_status[number_of_dots - 1][number_of_dots - 1] = 5
 
         self.refresh_board()
 
@@ -119,6 +127,40 @@ class BoxesGame:
                 self.canvas.create_oval(start_x - dot_width / 2, end_x - dot_width / 2, start_x + dot_width / 2,
                                         end_x + dot_width / 2, fill=color,
                                         outline=color)
+
+    def square_count(self, val, board_status):
+        turn = val
+        p1_count = 0
+        p2_count = 0
+        bigger_matrix = 6
+        smaller_matrix = 2
+        p = bigger_matrix - smaller_matrix + 1
+        x = np.arange(p).repeat(smaller_matrix)
+        y = np.tile(np.arange(smaller_matrix), p) + x
+
+        b = board_status[np.newaxis].repeat(p, axis=0)
+        c = b[x, y]
+
+        d = c.reshape(p, smaller_matrix, bigger_matrix)
+
+        e = d[:, np.newaxis].repeat(p, axis=1)
+        f = e[:, x, :, y]
+        g = f.reshape(p, smaller_matrix, p, smaller_matrix)
+        h = g.transpose(2, 0, 3, 1)
+
+        for i in range(0, p):
+            for j in range(0, p):
+                if deter.det(h[i, j]) == 0 and np.sum(h[i, j]) == turn * 4:
+                    if turn == 1:
+                        p1_count += 1
+                    else:
+                        p2_count += 1
+
+        if val == 1:
+            return p1_count
+        else:
+            return p2_count
+
 
 game_instance = BoxesGame()
 game_instance.mainloop()
