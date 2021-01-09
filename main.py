@@ -145,7 +145,6 @@ class BoxesGame:
 
     def play_again(self):
         self.player1_turn = True
-        self.player2_turn = False
 
         self.player1_position = (0, 0)
         self.player2_position = (number_of_dots - 1, number_of_dots - 1)
