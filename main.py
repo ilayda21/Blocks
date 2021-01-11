@@ -1,7 +1,7 @@
 from tkinter import *
-
 import numpy as np
 import numpy.linalg as deter
+from tkinter import messagebox as mb
 
 size_of_board = 700
 number_of_dots = 6
@@ -26,12 +26,18 @@ player_2_value = 5
 
 class BoxesGame:
     def __init__(self):
+        self.board_status = np.zeros(shape=(number_of_dots, number_of_dots))
+        self.player2_position = (number_of_dots - 1, number_of_dots - 1)
+        self.player1_position = (0, 0)
         self.window = Tk()
         self.window.title('Boxes')
-        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board)
+        self.canvas = Canvas(self.window, width=size_of_board + 200, height=size_of_board)
         self.canvas.pack()
         self.player1_turn = True
         self.score_items = []
+        self.lines = []
+        self.items_dot = []
+        self.game_end_text = []
         self.play_again()
         self.window.bind('<Key>', self.on_key_click)
         self.player_1_score = 0
@@ -61,6 +67,9 @@ class BoxesGame:
 
                 self.player_2_score = self.square_count(player_2_value, self.board_status)
             self.create_score_board(self.player_1_score, self.player_2_score)
+        if self.is_over():
+            self.create_game_end_panel(self.player_1_score, self.player_2_score)
+            self.callback()
 
     def draw_board(self, old_position, current_position, color_1, color_2, opposite_player_position,
                    opposite_player_color_1, opposite_player_color_2):
@@ -76,9 +85,11 @@ class BoxesGame:
         end_x = j * distance_between_dots + distance_between_dots / 2
 
         self.canvas.delete(self.dots[j][i])
-        self.dots[j][i] = self.canvas.create_oval(start_x - dot_width / 2, end_x - dot_width / 2, start_x + dot_width / 2,
+        self.dots[j][i] = self.canvas.create_oval(start_x - dot_width / 2, end_x - dot_width / 2,
+                                                  start_x + dot_width / 2,
                                                   end_x + dot_width / 2, fill=color,
                                                   outline=color_2, width=width)
+        self.items_dot.append(self.dots[j][i])
 
     def check_edges_to_draw(self, current_position):
         x = current_position[0]
@@ -108,7 +119,8 @@ class BoxesGame:
 
         e_point_x = end[1] * distance_between_dots + distance_between_dots / 2
         e_point_y = end[0] * distance_between_dots + distance_between_dots / 2
-        self.canvas.create_line(s_point_x, s_point_y, e_point_x, e_point_y, fill=color, width=edge_width)
+        self.lines.append(
+            self.canvas.create_line(s_point_x, s_point_y, e_point_x, e_point_y, fill=color, width=edge_width))
 
     def update_position(self, pressed_key, player_position, is_player_1):
         new_player_position_x = -1
@@ -120,40 +132,40 @@ class BoxesGame:
         if pressed_key == "Up":
             new_player_position_x = player_position[0] - 1
             new_player_position_y = player_position[1]
-            if new_player_position_x >= 0 and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+            if new_player_position_x >= 0 and self.board_status[new_player_position_x][
+                new_player_position_y] != enemy_player_indicator:
                 self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
         elif pressed_key == "Right":
             new_player_position_x = player_position[0]
             new_player_position_y = player_position[1] + 1
-            if new_player_position_y < number_of_dots and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+            if new_player_position_y < number_of_dots and self.board_status[new_player_position_x][
+                new_player_position_y] != enemy_player_indicator:
                 self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
         elif pressed_key == "Down":
             new_player_position_x = player_position[0] + 1
             new_player_position_y = player_position[1]
-            if new_player_position_x < number_of_dots and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+            if new_player_position_x < number_of_dots and self.board_status[new_player_position_x][
+                new_player_position_y] != enemy_player_indicator:
                 self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
         elif pressed_key == "Left":
             new_player_position_x = player_position[0]
             new_player_position_y = player_position[1] - 1
-            if new_player_position_y >= 0 and self.board_status[new_player_position_x][new_player_position_y] != enemy_player_indicator:
+            if new_player_position_y >= 0 and self.board_status[new_player_position_x][
+                new_player_position_y] != enemy_player_indicator:
                 self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
         return is_valid, new_player_position_x, new_player_position_y
 
     def play_again(self):
         self.player1_turn = True
-
-        self.player1_position = (0, 0)
-        self.player2_position = (number_of_dots - 1, number_of_dots - 1)
-
         self.board_status = np.zeros(shape=(number_of_dots, number_of_dots))
-
+        self.player2_position = (number_of_dots - 1, number_of_dots - 1)
+        self.player1_position = (0, 0)
         self.board_status[0][0] = player_1_value
         self.board_status[number_of_dots - 1][number_of_dots - 1] = player_2_value
-
         self.create_score_board(str(0), str(0))
 
         self.refresh_board()
@@ -161,19 +173,38 @@ class BoxesGame:
     def create_score_board(self, player_1_score, player_2_score):
         for item in self.score_items:
             self.canvas.delete(item)
-        self.score_items.append(self.canvas.create_text(150, 15, fill=dot_color_p1, font="Times 20 bold",
+        self.score_items.append(self.canvas.create_text(750, 60, fill=dot_color_p1, font="Times 20 bold",
                                                         text="Player 1:"))
-        self.score_items.append(self.canvas.create_text(220, 15, fill="black", font="Times 20 bold",
+        self.score_items.append(self.canvas.create_text(820, 60, fill="black", font="Times 20 bold",
                                                         text=player_1_score))
-        self.score_items.append(self.canvas.create_text(500, 15, fill=dot_color_p2, font="Times 20 bold",
+        self.score_items.append(self.canvas.create_text(750, 100, fill=dot_color_p2, font="Times 20 bold",
                                                         text="Player 2:"))
-        self.score_items.append(self.canvas.create_text(570, 15, fill="black", font="Times 20 bold",
+        self.score_items.append(self.canvas.create_text(820, 100, fill="black", font="Times 20 bold",
                                                         text=player_2_score))
+
+    def create_game_end_panel(self, player_1_score, player_2_score):
+        text = ""
+        if player_2_score < player_1_score:
+            text = "Player 1 \n Wins ! "
+        elif player_1_score < player_2_score:
+            text = "Player 2 \n  Wins !"
+        elif player_1_score == player_2_score:
+            text = "  It is \na TIE !"
+
+        self.game_end_text.append(self.canvas.create_text(700, 220, anchor=W, fill="black", font="Times 35 bold",
+                                                          text=text))
 
     def mainloop(self):
         self.window.mainloop()
 
     def refresh_board(self):
+        for item in self.lines:
+            self.canvas.delete(item)
+        for item in self.game_end_text:
+            self.canvas.delete(item)
+        for item in self.items_dot:
+            self.canvas.delete(item)
+
         for i in range(number_of_dots):
             x = i * distance_between_dots + distance_between_dots / 2
             self.canvas.create_line(x, distance_between_dots / 2, x,
@@ -192,7 +223,7 @@ class BoxesGame:
 
                 color = dot_color
                 outline_color = dot_color
-                outline_width = 1
+                outline_width = 3
                 if i == 0 and j == 0:
                     color = dot_color_p1
                     outline_color = player1_color_light
@@ -202,9 +233,17 @@ class BoxesGame:
                     outline_color = player2_color_light
                     outline_width = 1
                 oval = self.canvas.create_oval(start_x - dot_width / 2, end_x - dot_width / 2, start_x + dot_width / 2,
-                                               end_x + dot_width / 2, fill=color, outline=outline_color, width=outline_width)
+                                               end_x + dot_width / 2, fill=color, outline=outline_color,
+                                               width=outline_width)
                 temp.append(oval)
             self.dots.append(temp)
+
+    def is_over(self):
+        for i in range(len(self.board_status)):
+            for j in range(len(self.board_status[i])):
+                if self.board_status[i][j] == 0:
+                    return False
+        return True
 
     def square_count(self, val, board_status):
         turn = val
@@ -238,6 +277,13 @@ class BoxesGame:
             return p1_count
         else:
             return p2_count
+
+    def callback(self):
+        answer = mb.askyesno("Question", "Do you want to play again?")
+        if answer:
+            self.play_again()
+        else:
+            self.window.quit()
 
 
 game_instance = BoxesGame()
