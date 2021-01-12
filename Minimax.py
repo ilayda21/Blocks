@@ -1,7 +1,9 @@
+import math
+
 import numpy as np
 import numpy.linalg as deter
 
-board_size = 6
+board_size = 5
 player_1_indicator = 1
 player_2_indicator = 5
 
@@ -11,6 +13,8 @@ class Game:
         self.initialize_game()
 
     def initialize_game(self):
+        self.player_2_moves = []
+        self.player_1_moves = []
         self.current_state = np.zeros(shape=(board_size, board_size))
 
         self.player_1_position = (0, 0)
@@ -149,7 +153,7 @@ class Game:
             #    +
             #  + + +
             elif pos_x - 1 >= 0 and pos_x + 1 < board_size and pos_y - 1 >= 0:
-                if self.current_state[pos_x - 1][pos_y] != 0and self.current_state[pos_x][pos_y + 1] != 0 and self.current_state[pos_x][pos_y - 1] != 0:
+                if self.current_state[pos_x - 1][pos_y] != 0 and self.current_state[pos_x][pos_y + 1] != 0 and self.current_state[pos_x][pos_y - 1] != 0:
                     filtered_possible_position.append(possible_position)
 
         f_result = set(possible_positions) - set(filtered_possible_position)
@@ -276,15 +280,14 @@ class Game:
         return minv, qx, qy
 
     def play(self):
+        move_count = 1
         while True:
             self.draw_board()
-
+            print("----------------------------------------------------")
             p1_positions = self.get_possible_positions(self.player_1_position)
             p2_positions = self.get_possible_positions(self.player_2_position)
             self.result = self.is_end(p1_positions + p2_positions)
-
-            # Printing the appropriate message if the game has ended
-            if self.result != None:
+            if self.result is not None:
                 if self.result == player_2_indicator:
                     print('The winner is Player 2!')
                 elif self.result == player_1_indicator:
@@ -295,19 +298,20 @@ class Game:
                 self.initialize_game()
                 return
 
-            # If it's player's turn
+            print("-----------------------MOVE-" + str(math.ceil(move_count/2)) + "----------------------")
             if self.player_turn == player_2_indicator:
                 (m, qx, qy) = self.min(self.player_1_position, self.player_2_position, -2, 2)
                 self.current_state[qx][qy] = player_2_indicator
                 self.player_turn = player_1_indicator
                 self.player_2_position = (qx, qy)
-
-            # If it's AI's turn
+                print("Player 2 Move: (" + str(qx) + "," + str(qy) + ")")
             else:
-                (m, px, py) = self.max(self.player_1_position, self.player_2_position,-2, 2)
+                (m, px, py) = self.max(self.player_1_position, self.player_2_position, -2, 2)
                 self.current_state[px][py] = player_1_indicator
                 self.player_turn = player_2_indicator
                 self.player_1_position = (px, py)
+                print("Player 1 Move: (" + str(px) + "," + str(py) + ")")
+            move_count += 1
 
 
 g = Game()
