@@ -3,32 +3,31 @@ import math
 import numpy as np
 import numpy.linalg as deter
 
-board_size = 5
 player_1_indicator = 1
 player_2_indicator = 5
 
 
-class Game:
-    def __init__(self):
+class Minimax:
+    def __init__(self, board_size_as_prm):
+        self.board_size = board_size_as_prm
         self.initialize_game()
 
     def initialize_game(self):
         self.player_2_moves = []
         self.player_1_moves = []
-        self.current_state = np.zeros(shape=(board_size, board_size))
+        self.current_state = np.zeros(shape=(self.board_size, self.board_size))
 
         self.player_1_position = (0, 0)
-        self.player_2_position = (board_size - 1, board_size - 1)
+        self.player_2_position = (self.board_size - 1, self.board_size - 1)
 
         self.current_state[0][0] = player_1_indicator
-        self.current_state[board_size - 1][board_size - 1] = player_2_indicator
+        self.current_state[self.board_size - 1][self.board_size - 1] = player_2_indicator
 
-        # Player X always plays first
-        self.player_turn = player_1_indicator
+        self.player_turn = player_2_indicator
 
     def draw_board(self):
-        for i in range(0, board_size):
-            for j in range(0, board_size):
+        for i in range(0, self.board_size):
+            for j in range(0, self.board_size):
                 print('{}|'.format(self.current_state[i][j]), end=" ")
             print()
         print()
@@ -37,7 +36,7 @@ class Game:
         turn = val
         p1_count = 0
         p2_count = 0
-        bigger_matrix = board_size
+        bigger_matrix = self.board_size
         smaller_matrix = 2
         p = bigger_matrix - smaller_matrix + 1
         x = np.arange(p).repeat(smaller_matrix)
@@ -87,13 +86,13 @@ class Game:
         if current_player_position_x - 1 >= 0 and self.current_state[current_player_position_x - 1][current_player_position_y] == 0:
             possible_positions.append((current_player_position_x - 1, current_player_position_y))
 
-        if current_player_position_x + 1 < board_size and self.current_state[current_player_position_x + 1][current_player_position_y] == 0:
+        if current_player_position_x + 1 < self.board_size and self.current_state[current_player_position_x + 1][current_player_position_y] == 0:
             possible_positions.append((current_player_position_x + 1, current_player_position_y))
 
         if current_player_position_y - 1 >= 0 and self.current_state[current_player_position_x][current_player_position_y - 1] == 0:
             possible_positions.append((current_player_position_x, current_player_position_y - 1))
 
-        if current_player_position_y + 1 < board_size and self.current_state[current_player_position_x][current_player_position_y + 1] == 0:
+        if current_player_position_y + 1 < self.board_size and self.current_state[current_player_position_x][current_player_position_y + 1] == 0:
             possible_positions.append((current_player_position_x, current_player_position_y + 1))
 
         filtered_possible_position = []
@@ -103,26 +102,26 @@ class Game:
             #   +
             # + + +
             #   +
-            if pos_x - 1 >= 0 and pos_x + 1 < board_size and pos_y + 1 < board_size and pos_y - 1 >= 0:
+            if pos_x - 1 >= 0 and pos_x + 1 < self.board_size and pos_y + 1 < self.board_size and pos_y - 1 >= 0:
                 if self.current_state[pos_x - 1][pos_y] != 0 and self.current_state[pos_x + 1][pos_y] != 0 and self.current_state[pos_x][pos_y + 1] != 0 and \
                         self.current_state[pos_x][pos_y - 1] != 0:
                     filtered_possible_position.append(possible_position)
             # + +
             # +
             #
-            elif pos_x + 1 < board_size and pos_y + 1 < board_size:
+            elif pos_x + 1 < self.board_size and pos_y + 1 < self.board_size:
                 if self.current_state[pos_x + 1][pos_y] != 0 and self.current_state[pos_x][pos_y + 1] != 0:
                     filtered_possible_position.append(possible_position)
             #   + +
             #     +
             #
-            elif pos_x - 1 >= 0 and pos_y + 1 < board_size:
+            elif pos_x - 1 >= 0 and pos_y + 1 < self.board_size:
                 if self.current_state[pos_x - 1][pos_y] != 0 and self.current_state[pos_x][pos_y + 1] != 0:
                     filtered_possible_position.append(possible_position)
             #
             # +
             # + +
-            elif pos_x + 1 < board_size and pos_y - 1 >= 0:
+            elif pos_x + 1 < self.board_size and pos_y - 1 >= 0:
                 if self.current_state[pos_x + 1][pos_y] != 0 and self.current_state[pos_x][pos_y - 1] != 0:
                     filtered_possible_position.append(possible_position)
             #
@@ -134,25 +133,25 @@ class Game:
             #  +
             #  + +
             #  +
-            elif pos_x + 1 < board_size and pos_y + 1 < board_size and pos_y - 1 >= 0:
+            elif pos_x + 1 < self.board_size and pos_y + 1 < self.board_size and pos_y - 1 >= 0:
                 if self.current_state[pos_x + 1][pos_y] != 0 and self.current_state[pos_x][pos_y + 1] != 0 and self.current_state[pos_x][pos_y - 1] != 0:
                     filtered_possible_position.append(possible_position)
             #  + + +
             #    +
             #
-            elif pos_x - 1 >= 0 and pos_x + 1 < board_size and pos_y + 1 < board_size:
+            elif pos_x - 1 >= 0 and pos_x + 1 < self.board_size and pos_y + 1 < self.board_size:
                 if self.current_state[pos_x - 1][pos_y] != 0 and self.current_state[pos_x + 1][pos_y] != 0 and self.current_state[pos_x][pos_y + 1] != 0:
                     filtered_possible_position.append(possible_position)
             #     +
             #   + +
             #     +
-            elif pos_x - 1 >= 0 and pos_y + 1 < board_size and pos_y - 1 >= 0:
+            elif pos_x - 1 >= 0 and pos_y + 1 < self.board_size and pos_y - 1 >= 0:
                 if self.current_state[pos_x - 1][pos_y] != 0 and self.current_state[pos_x][pos_y + 1] != 0 and self.current_state[pos_x][pos_y - 1] != 0:
                     filtered_possible_position.append(possible_position)
             #
             #    +
             #  + + +
-            elif pos_x - 1 >= 0 and pos_x + 1 < board_size and pos_y - 1 >= 0:
+            elif pos_x - 1 >= 0 and pos_x + 1 < self.board_size and pos_y - 1 >= 0:
                 if self.current_state[pos_x - 1][pos_y] != 0 and self.current_state[pos_x][pos_y + 1] != 0 and self.current_state[pos_x][pos_y - 1] != 0:
                     filtered_possible_position.append(possible_position)
 
@@ -283,7 +282,6 @@ class Game:
         move_count = 1
         while True:
             self.draw_board()
-            print("----------------------------------------------------")
             p1_positions = self.get_possible_positions(self.player_1_position)
             p2_positions = self.get_possible_positions(self.player_2_position)
             self.result = self.is_end(p1_positions + p2_positions)
@@ -294,11 +292,10 @@ class Game:
                     print('The winner is Player 1!')
                 elif self.result == 0:
                     print("It's a tie!")
-
                 self.initialize_game()
                 return
 
-            print("-----------------------MOVE-" + str(math.ceil(move_count/2)) + "----------------------")
+            print("-----------------------MOVE-" + str(math.ceil(move_count / 2)) + "----------------------")
             if self.player_turn == player_2_indicator:
                 (m, qx, qy) = self.min(self.player_1_position, self.player_2_position, -2, 2)
                 self.current_state[qx][qy] = player_2_indicator
@@ -312,7 +309,4 @@ class Game:
                 self.player_1_position = (px, py)
                 print("Player 1 Move: (" + str(px) + "," + str(py) + ")")
             move_count += 1
-
-
-g = Game()
-g.play()
+            print("----------------------------------------------------")
