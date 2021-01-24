@@ -9,6 +9,7 @@ import numpy.linalg as deter
 player_1_indicator = 1
 player_2_indicator = 5
 
+
 class Minimax:
     def __init__(self, board_size_as_prm):
         self.board_size = board_size_as_prm
@@ -173,39 +174,42 @@ class Minimax:
             possible_positions = list(f_result)
         return possible_positions
 
-    # Player player_1 is max
     def max(self, current_p1_position, current_p2_position, alpha, beta):
-        # Possible values for maxv are:
-        # -1 - loss
-        # 0  - a tie
-        # 1  - win
-
-        # We're initially setting it to -2 as worse than the worst case:
-        maxv = -2
+        maxv = -1 * (self.board_size * self.board_size)
 
         px = None
         py = None
 
-        possible_positions = self.get_possible_positions(current_p2_position)
+        possible_positions = self.get_possible_positions(current_p1_position)
         result = self.is_end(possible_positions)
-        # If the game came to an end, the function needs to return
-        # the evaluation function of the end. That can be:
-        # -1 - loss
-        # 0  - a tie
-        # 1  - win
-        if result == player_2_indicator:
-            return (-1, current_p2_position[0], current_p2_position[1])
-        elif result == player_1_indicator:
-            return (1, current_p2_position[0], current_p2_position[1])
-        elif result == 0:
-            return (0, current_p2_position[0], current_p2_position[1])
+
+        if result is not None:
+            if len(self.get_possible_positions(current_p2_position)) > 0:
+                (m, min_i, min_j) = self.min(current_p1_position, current_p2_position, alpha, beta)
+                i = current_p1_position[0]
+                j = current_p1_position[1]
+                # Fixing the maxv value if needed
+                if m > maxv:
+                    maxv = m
+                    px = i
+                    py = j
+                return maxv, px, py
+            p_1_count = self.square_count(player_1_indicator, self.board_status)
+            p_2_count = self.square_count(player_2_indicator, self.board_status)
+
+            if result == player_2_indicator:
+                return (-1 * p_2_count, current_p1_position[0], current_p1_position[1])
+            elif result == player_1_indicator:
+                return (p_1_count, current_p1_position[0], current_p1_position[1])
+            elif result == 0:
+                return (0, current_p1_position[0], current_p1_position[1])
 
         for position in possible_positions:
             i = position[0]
             j = position[1]
             self.board_status[i][j] = player_1_indicator
 
-            (m, min_i, min_j) = self.min(current_p1_position, (i, j), alpha, beta)
+            (m, min_i, min_j) = self.min((i, j), current_p2_position, alpha, beta)
             # Fixing the maxv value if needed
             if m > maxv:
                 maxv = m
@@ -223,26 +227,34 @@ class Minimax:
 
     # Player 'player 2' is min
     def min(self, current_p1_position, current_p2_position, alpha, beta):
-        # Possible values for minv are:
-        # -1 - win
-        # 0  - a tie
-        # 1  - loss
-
         # We're initially setting it to 2 as worse than the worst case:
-        minv = 2
+        minv = self.board_size * self.board_size
 
         qx = None
         qy = None
         possible_positions = self.get_possible_positions(current_p2_position)
         result = self.is_end(possible_positions)
 
-        if result == player_2_indicator:
-            return (-1, current_p2_position[0], current_p2_position[1])
-        elif result == player_1_indicator:
-            return (1, current_p2_position[0], current_p2_position[1])
-        elif result == 0:
-            return (0, current_p2_position[0], current_p2_position[1])
+        if result is not None:
+            if len(self.get_possible_positions(current_p1_position)) > 0:
+                (m, min_i, min_j) = self.max(current_p1_position, current_p2_position, alpha, beta)
+                i = current_p1_position[0]
+                j = current_p1_position[1]
+                if m < minv:
+                    minv = m
+                    qx = i
+                    qy = j
+                return minv, qx, qy
 
+            p_1_count = self.square_count(player_1_indicator, self.board_status)
+            p_2_count = self.square_count(player_2_indicator, self.board_status)
+
+            if result == player_2_indicator:
+                return (-1 * p_2_count, current_p2_position[0], current_p2_position[1])
+            elif result == player_1_indicator:
+                return (p_1_count, current_p2_position[0], current_p2_position[1])
+            elif result == 0:
+                return (0, current_p2_position[0], current_p2_position[1])
         for position in possible_positions:
             i = position[0]
             j = position[1]
@@ -263,8 +275,8 @@ class Minimax:
         return minv, qx, qy
 
     def on_key_click(self, event):
-        if event.char != event.keysym and len(event.char) != 1:
-            if self.player1_turn is True:
+        if self.player1_turn is True:
+            if event.char != event.keysym and len(event.char) != 1:
                 result_position_info = self.update_position(event.keysym, self.player1_position, True)
                 if result_position_info[0]:
                     new_position = (result_position_info[1], result_position_info[2])
@@ -275,7 +287,7 @@ class Minimax:
                     self.play()
 
                 self.player_1_score = self.square_count(self.player_1_value, self.board_status)
-            self.create_score_board(self.player_1_score, self.player_2_score)
+                self.create_score_board(self.player_1_score, self.player_2_score)
         if self.is_over():
             self.create_game_end_panel(self.player_1_score, self.player_2_score)
             self.callback()
@@ -378,20 +390,20 @@ class Minimax:
         for item in self.score_items:
             self.canvas.delete(item)
         self.score_items.append(self.canvas.create_text(750, 60, fill=self.dot_color_p1, font="Times 20 bold",
-                                                        text="Player 1:"))
+                                                        text="You:"))
         self.score_items.append(self.canvas.create_text(820, 60, fill="black", font="Times 20 bold",
                                                         text=player_1_score))
         self.score_items.append(self.canvas.create_text(750, 100, fill=self.dot_color_p2, font="Times 20 bold",
-                                                        text="Player 2:"))
+                                                        text="AI:"))
         self.score_items.append(self.canvas.create_text(820, 100, fill="black", font="Times 20 bold",
                                                         text=player_2_score))
 
     def create_game_end_panel(self, player_1_score, player_2_score):
         text = ""
         if player_2_score < player_1_score:
-            text = "Player 1 \n Wins ! "
+            text = "You \n Win ! "
         elif player_1_score < player_2_score:
-            text = "Player 2 \n  Wins !"
+            text = "AI \n  Wins !"
         elif player_1_score == player_2_score:
             text = "  It is \na TIE !"
 
@@ -468,13 +480,13 @@ class Minimax:
         p_2_possible_positions_len = len(self.check_position(self.player2_position))
 
         if p_1_possible_positions_len == 0:
-            self.player1_turn = False
             self.draw_board(self.player1_position, self.player1_position, self.dot_color_p1, self.player1_color_light,
                             self.player2_position, self.dot_color_p2, self.player2_color_light)
+            self.player1_turn = False
         elif p_2_possible_positions_len == 0:
-            self.player1_turn = True
             self.draw_board(self.player2_position, self.player2_position, self.dot_color_p2, self.player2_color_light,
                             self.player1_position, self.dot_color_p1, self.player1_color_light)
+            self.player1_turn = True
         return np.count_nonzero(self.board_status == 0) == 0 or (p_1_possible_positions_len == 0 and p_2_possible_positions_len == 0)
 
     def callback(self):
@@ -497,9 +509,14 @@ class Minimax:
                 print("It's a tie!")
             return
 
+        loading_text = self.canvas.create_text(400, 300, fill=self.dot_color_p2, font="Times 20 bold",
+                                               text="Wait for AI to make it's move!")
+        self.canvas.update_idletasks()
+
         while True:
             if self.player1_turn is False:
-                (m, qx, qy) = self.min(self.player1_position, self.player2_position, -2, 2)
+                (m, qx, qy) = self.min(self.player1_position, self.player2_position,
+                                       -1 * (self.board_size * self.board_size), (self.board_size * self.board_size))
                 self.board_status[qx][qy] = player_2_indicator
                 self.draw_board(self.player2_position, (qx, qy), self.dot_color_p2, self.player2_color_light,
                                 self.player1_position, self.dot_color_p1, self.player1_color_light)
@@ -515,6 +532,7 @@ class Minimax:
             else:
                 break
 
+        self.canvas.delete(loading_text)
 
 
 minimax = Minimax(board_size)
