@@ -6,6 +6,16 @@ from tkinter import messagebox as mb
 import numpy as np
 import numpy.linalg as deter
 
+from pymongo import MongoClient
+
+from pymongo import DESCENDING
+import dns
+
+
+uri = "mongodb+srv://elif:elif@cluster0.pj6ji.mongodb.net/test"
+my_db_cli = MongoClient(uri)
+db = my_db_cli.SquaresGame
+my_scores = db.scores
 player_1_indicator = 1
 player_2_indicator = 5
 
@@ -65,7 +75,7 @@ class Minimax:
         f = e[:, x, :, y]
         g = f.reshape(p, smaller_matrix, p, smaller_matrix)
         h = g.transpose(2, 0, 3, 1)
-
+   
         for i in range(0, p):
             for j in range(0, p):
                 if deter.det(h[i, j]) == 0 and np.sum(h[i, j]) == turn * 4:
@@ -402,10 +412,15 @@ class Minimax:
         text = ""
         if player_2_score < player_1_score:
             text = "You \n Win ! "
+            my_scores.insert_one({"user_name": "deneme", "score": player_1_score, "status": "win"})
+
         elif player_1_score < player_2_score:
             text = "AI \n  Wins !"
+            my_scores.insert_one({"user_name": "deneme1", "score": player_1_score, "status": "lose"})
+
         elif player_1_score == player_2_score:
             text = "  It is \na TIE !"
+            my_scores.insert_one({"user_name": "deneme1", "score": player_1_score, "status": "tie"})
 
         self.game_end_text.append(self.canvas.create_text(700, 220, anchor=W, fill="black", font="Times 35 bold",
                                                           text=text))
