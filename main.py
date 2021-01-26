@@ -1,16 +1,12 @@
 board_size = 5
 
+import tkinter as tk
 from tkinter import *
 from tkinter import messagebox as mb
 
 import numpy as np
 import numpy.linalg as deter
-
 from pymongo import MongoClient
-
-from pymongo import DESCENDING
-import dns
-
 
 uri = "mongodb+srv://elif:elif@cluster0.pj6ji.mongodb.net/test"
 my_db_cli = MongoClient(uri)
@@ -51,10 +47,11 @@ class Minimax:
         self.lines = []
         self.items_dot = []
         self.game_end_text = []
-        self.play_again()
         self.player_1_score = 0
         self.player_2_score = 0
         self.canvas.bind_all('<Key>', self.on_key_click)
+
+        self.is_in_start_page = True
 
     def square_count(self, val, board_status):
         turn = val
@@ -75,7 +72,7 @@ class Minimax:
         f = e[:, x, :, y]
         g = f.reshape(p, smaller_matrix, p, smaller_matrix)
         h = g.transpose(2, 0, 3, 1)
-   
+
         for i in range(0, p):
             for j in range(0, p):
                 if deter.det(h[i, j]) == 0 and np.sum(h[i, j]) == turn * 4:
@@ -400,7 +397,7 @@ class Minimax:
         for item in self.score_items:
             self.canvas.delete(item)
         self.score_items.append(self.canvas.create_text(750, 60, fill=self.dot_color_p1, font="Times 20 bold",
-                                                        text="You:"))
+                                                        text= self.user_name + ":"))
         self.score_items.append(self.canvas.create_text(820, 60, fill="black", font="Times 20 bold",
                                                         text=player_1_score))
         self.score_items.append(self.canvas.create_text(750, 100, fill=self.dot_color_p2, font="Times 20 bold",
@@ -412,15 +409,15 @@ class Minimax:
         text = ""
         if player_2_score < player_1_score:
             text = "You \n Win ! "
-            my_scores.insert_one({"user_name": "deneme", "score": player_1_score, "status": "win"})
+            my_scores.insert_one({"user_name": self.user_name, "score": player_1_score, "status": "win"})
 
         elif player_1_score < player_2_score:
             text = "AI \n  Wins !"
-            my_scores.insert_one({"user_name": "deneme1", "score": player_1_score, "status": "lose"})
+            my_scores.insert_one({"user_name": self.user_name, "score": player_1_score, "status": "lose"})
 
         elif player_1_score == player_2_score:
             text = "  It is \na TIE !"
-            my_scores.insert_one({"user_name": "deneme1", "score": player_1_score, "status": "tie"})
+            my_scores.insert_one({"user_name": self.user_name, "score": player_1_score, "status": "tie"})
 
         self.game_end_text.append(self.canvas.create_text(700, 220, anchor=W, fill="black", font="Times 35 bold",
                                                           text=text))
@@ -549,6 +546,38 @@ class Minimax:
 
         self.canvas.delete(loading_text)
 
+    def clicked(self, event):
+        temp_user_name = self.entry1.get()
+        if temp_user_name != "":
+            self.user_name = temp_user_name
+            self.canvas.delete("all")
+            self.play_again()
+            self.canvas.create_text(720, 490, fill="black", font="Times 15 bold", text="Instructions:")
+            self.canvas.create_text(750, 530, fill="black", font="Times 12", text="=>  The red dot is you.")
+            self.canvas.create_text(770, 570, fill="black", font="Times 12", text="=>  Move it with arrow keys.")
+            self.canvas.create_text(780, 610, fill="black", font="Times 12", text="=>  Try to make as many squares")
+            self.canvas.create_text(770, 640, fill="black", font="Times 12", text="as you can!")
+
+        else:
+            self.canvas.create_text(450, 350, text="Please enter a user name!", font="Times 20 bold",
+                                    fill="red")
+
+    def start_process(self):
+        self.canvas.create_text(450, 200, fill="#00ff90", font="Times 50 bold", text="BOXES !!")
+
+        self.canvas.create_text(350, 298, text="Enter a user name: ", font="Times 20 bold")
+
+        buttonBG = self.canvas.create_rectangle(350, 400, 550, 460, fill="#57efff", outline="black")
+        buttonTXT = self.canvas.create_text(450, 430, text="PLAY", font="Times 20 bold")
+
+        self.entry1 = tk.Entry(self.canvas)
+        self.canvas.create_window(550, 300, window=self.entry1)
+
+        self.canvas.tag_bind(buttonBG, "<Button-1>", self.clicked)
+        self.canvas.tag_bind(buttonTXT, "<Button-1>", self.clicked)
+
+        minimax.mainloop()
+
 
 minimax = Minimax(board_size)
-minimax.mainloop()
+minimax.start_process()
