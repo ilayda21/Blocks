@@ -7,6 +7,7 @@ from tkinter import messagebox as mb
 import numpy as np
 import numpy.linalg as deter
 from pymongo import MongoClient
+import random
 
 uri = "mongodb+srv://elif:elif@cluster0.pj6ji.mongodb.net/test"
 my_db_cli = MongoClient(uri)
@@ -36,8 +37,10 @@ class Minimax:
         self.empty_indicator = 0
 
         self.board_status = np.zeros(shape=(self.number_of_dots, self.number_of_dots))
-        self.player1_position = (self.number_of_dots - 1, self.number_of_dots - 1)
-        self.player2_position = (0, 0)
+
+        self.give_random_position_for_player()
+        self.player1_position = self.p1_starting_pos
+        self.player2_position = self.p2_starting_pos
         self.window = Tk()
         self.window.title('Boxes')
         self.canvas = Canvas(self.window, width=self.size_of_board + 200, height=self.size_of_board)
@@ -52,6 +55,20 @@ class Minimax:
         self.canvas.bind_all('<Key>', self.on_key_click)
 
         self.is_in_start_page = True
+
+    def give_random_position_for_player(self):
+        x_1 = random.randint(0, self.board_size-1)
+        y_1 = random.randint(0, self.board_size-1)
+
+        x_2 = random.randint(0, self.board_size-1)
+        y_2 = random.randint(0, self.board_size-1)
+
+        while x_1 == x_2 and y_1 == y_2:
+            x_2 = random.randint(0, self.board_size-1)
+            y_2 = random.randint(0, self.board_size-1)
+
+        self.p1_starting_pos = (x_1, y_1)
+        self.p2_starting_pos = (x_2, y_2)
 
     def square_count(self, val, board_status):
         turn = val
@@ -385,10 +402,12 @@ class Minimax:
     def play_again(self):
         self.player1_turn = True
         self.board_status = np.zeros(shape=(self.number_of_dots, self.number_of_dots))
-        self.player2_position = (self.number_of_dots - 1, self.number_of_dots - 1)
-        self.player1_position = (0, 0)
-        self.board_status[0][0] = self.player_1_value
-        self.board_status[self.number_of_dots - 1][self.number_of_dots - 1] = self.player_2_value
+        self.give_random_position_for_player()
+
+        self.player2_position = self.p2_starting_pos
+        self.player1_position = self.p1_starting_pos
+        self.board_status[self.p1_starting_pos[0]][self.p1_starting_pos[1]] = self.player_1_value
+        self.board_status[self.p2_starting_pos[0]][self.p2_starting_pos[1]] = self.player_2_value
         self.create_score_board(str(0), str(0))
 
         self.refresh_board()
@@ -452,11 +471,11 @@ class Minimax:
                 color = self.dot_color
                 outline_color = self.dot_color
                 outline_width = 3
-                if i == 0 and j == 0:
+                if i == self.p1_starting_pos[1] and j == self.p1_starting_pos[0]:
                     color = self.dot_color_p1
                     outline_color = self.player1_color_light
                     outline_width = 5
-                elif i == self.number_of_dots - 1 and j == self.number_of_dots - 1:
+                elif i == self.p2_starting_pos[1] and j == self.p2_starting_pos[0]:
                     color = self.dot_color_p2
                     outline_color = self.player2_color_light
                     outline_width = 1
