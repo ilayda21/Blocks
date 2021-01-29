@@ -511,14 +511,6 @@ class Minimax:
         p_1_possible_positions_len = len(self.check_position(self.player1_position))
         p_2_possible_positions_len = len(self.check_position(self.player2_position))
 
-        # if p_1_possible_positions_len == 0:
-        #     self.draw_board(self.player1_position, self.player1_position, self.dot_color_p1, self.player1_color_light,
-        #                     self.player2_position, self.dot_color_p2, self.player2_color_light)
-        #     self.player1_turn = False
-        # elif p_2_possible_positions_len == 0:
-        #     self.draw_board(self.player2_position, self.player2_position, self.dot_color_p2, self.player2_color_light,
-        #                     self.player1_position, self.dot_color_p1, self.player1_color_light)
-        #     self.player1_turn = True
         return np.count_nonzero(self.board_status == 0) == 0 or (p_1_possible_positions_len == 0 and p_2_possible_positions_len == 0)
 
     def callback(self):
