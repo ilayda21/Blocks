@@ -268,7 +268,7 @@ class Minimax:
                     minv = m
                     qx = i
                     qy = j
-                return minv, qx, qy
+                return minv, self.player2_position[0], self.player2_position[1]
 
             p_1_count = self.square_count(player_1_indicator, self.board_status)
             p_2_count = self.square_count(player_2_indicator, self.board_status)
@@ -389,8 +389,9 @@ class Minimax:
             new_player_position_x = player_position[0] + 1
             new_player_position_y = player_position[1]
             if new_player_position_x < self.number_of_dots and self.board_status[new_player_position_x][new_player_position_y] == self.empty_indicator:
-                self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
                 is_valid = True
+                self.board_status[new_player_position_x][new_player_position_y] = current_player_indicator
+
         elif pressed_key == "Left":
             new_player_position_x = player_position[0]
             new_player_position_y = player_position[1] - 1
@@ -510,14 +511,14 @@ class Minimax:
         p_1_possible_positions_len = len(self.check_position(self.player1_position))
         p_2_possible_positions_len = len(self.check_position(self.player2_position))
 
-        if p_1_possible_positions_len == 0:
-            self.draw_board(self.player1_position, self.player1_position, self.dot_color_p1, self.player1_color_light,
-                            self.player2_position, self.dot_color_p2, self.player2_color_light)
-            self.player1_turn = False
-        elif p_2_possible_positions_len == 0:
-            self.draw_board(self.player2_position, self.player2_position, self.dot_color_p2, self.player2_color_light,
-                            self.player1_position, self.dot_color_p1, self.player1_color_light)
-            self.player1_turn = True
+        # if p_1_possible_positions_len == 0:
+        #     self.draw_board(self.player1_position, self.player1_position, self.dot_color_p1, self.player1_color_light,
+        #                     self.player2_position, self.dot_color_p2, self.player2_color_light)
+        #     self.player1_turn = False
+        # elif p_2_possible_positions_len == 0:
+        #     self.draw_board(self.player2_position, self.player2_position, self.dot_color_p2, self.player2_color_light,
+        #                     self.player1_position, self.dot_color_p1, self.player1_color_light)
+        #     self.player1_turn = True
         return np.count_nonzero(self.board_status == 0) == 0 or (p_1_possible_positions_len == 0 and p_2_possible_positions_len == 0)
 
     def callback(self):
